@@ -2,20 +2,20 @@
     <div class="container mx-auto px-4 py-6 max-w-2xl">
         
         {{-- Header --}}
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Aktivitas</h1>
+        <h1 class="text-2xl text-center font-bold text-gray-900 mb-6">Aktivitas</h1>
 
         {{-- Tab Switcher --}}
-        <div class="flex gap-2 mb-6">
+        <div class="flex gap-2 mb-6 border-b gray-200">
             <button wire:click="switchTab('active')"
-                    class="flex-1 py-3 rounded-lg font-semibold transition-colors {{ $activeTab === 'active' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700' }}">
+                    class="flex-1 {{ $activeTab === 'active' ? 'border-b-2 border-black' : '' }}">
                 Active
             </button>
             <button wire:click="switchTab('completed')"
-                    class="flex-1 py-3 rounded-lg font-semibold transition-colors {{ $activeTab === 'completed' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700' }}">
+                    class="flex-1 {{ $activeTab === 'completed' ? 'border-b-2 border-black' : '' }}">
                 Completed
             </button>
             <button wire:click="switchTab('cancelled')"
-                    class="flex-1 py-3 rounded-lg font-semibold transition-colors {{ $activeTab === 'cancelled' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700' }}">
+                    class="flex-1 {{ $activeTab === 'cancelled' ? 'border-b-2 border-black' : '' }}">
                 Cancelled
             </button>
         </div>

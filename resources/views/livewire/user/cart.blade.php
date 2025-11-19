@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-white pb-32">
+<div class="min-h-screen bg-white">
 
     <!-- Header -->
     <div class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-center relative sticky top-0 z-40">

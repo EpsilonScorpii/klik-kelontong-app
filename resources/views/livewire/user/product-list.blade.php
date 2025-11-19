@@ -3,7 +3,7 @@
     <!-- Page Header -->
     <section class="bg-white border-b border-gray-200 px-4 py-6">
         <div class="max-w-7xl mx-auto">
-            <h1 class="text-2xl font-bold text-gray-900 mb-4">🛍️ Semua Produk</h1>
+            <h1 class="text-2xl text-center font-bold text-black mb-4">Search</h1>
             
             <!-- Filters & Sort -->
             <div class="flex flex-col md:flex-row gap-4">
@@ -36,7 +36,7 @@
                 @if($selectedCategory || $searchQuery)
                     <button wire:click="clearFilter"
                             class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 whitespace-nowrap">
-                        🔄 Reset
+                        Reset
                     </button>
                 @endif
             </div>

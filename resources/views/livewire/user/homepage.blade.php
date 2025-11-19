@@ -10,15 +10,15 @@
                         <li class="splide__slide">
                             {{-- Ganti warna bawaan green-400/emerald-500 dengan kl-green-dark/kl-green --}}
                             <div
-                                class="bg-gradient-to-r from-kl-green-dark to-kl-green rounded-2xl overflow-hidden shadow-xl">
+                                class="bg-primary-light rounded-2xl overflow-hidden shadow-xl">
                                 <div class="flex flex-row items-start justify-between p-6 md:p-8">
-                                    <div class="flex-1 text-white mb-6 md:mb-0">
+                                    <div class="flex-1 text-primary mb-6 md:mb-0">
                                         <p class="text-sm font-medium mb-2">— THE BEST PRODUCT</p>
                                         <h1 class="text-3xl md:text-4xl font-bold mb-4">Promo Sembako</h1>
-                                        <p class="text-white/90 mb-6">"Promo sembako TERBATAS! Belanja sekarang sebelum
+                                        <p class="text-primary mb-6">"Promo sembako TERBATAS! Belanja sekarang sebelum
                                             promo berakhir! 🛒✨"</p>
                                         <a href="{{ route('products') }}" {{-- Ganti text-green-600 dengan text-kl-green-dark --}}
-                                            class="inline-flex items-center gap-2 bg-white text-kl-green-dark px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                                            class="inline-flex items-center gap-2 bg-primary text-primary-light px-2 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
                                             SHOP NOW
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -179,12 +179,12 @@
                             @auth
                                 <button wire:click="addToCart({{ $product['id'] }})" {{-- Ganti bg-green-600 dengan bg-kl-green dan hover:bg-green-700 dengan hover:bg-kl-green-dark --}}
                                     class="w-full bg-kl-green text-white py-2 rounded-lg font-medium hover:bg-kl-green-dark transition-colors text-sm">
-                                    + Keranjang
+                                    Beli
                                 </button>
                             @else
                                 <a href="{{ route('login') }}"
                                     class="block w-full bg-gray-600 text-white text-center py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors text-sm">
-                                    🔒 Login untuk Beli
+                                    Beli
                                 </a>
                             @endauth
                         </div>
@@ -207,7 +207,7 @@
         <section class="px-4 py-8 bg-gray-50">
             <div class="max-w-7xl mx-auto">
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold text-gray-900">🔥 Produk Unggulan</h2>
+                    <h2 class="text-xl font-bold text-gray-900">Produk Unggulan</h2>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -244,12 +244,12 @@
                                 @auth
                                     <button wire:click="addToCart({{ $product['id'] }})" {{-- Ganti bg-green-600 dengan bg-kl-green dan hover:bg-green-700 dengan hover:bg-kl-green-dark --}}
                                         class="w-full bg-kl-green text-white py-2 rounded-lg font-medium hover:bg-kl-green-dark transition-colors text-sm">
-                                        + Keranjang
+                                        Beli
                                     </button>
                                 @else
                                     <a href="{{ route('login') }}"
                                         class="block w-full bg-gray-600 text-white text-center py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors text-sm">
-                                        🔒 Login untuk Beli
+                                        Beli
                                     </a>
                                 @endauth
                             </div>

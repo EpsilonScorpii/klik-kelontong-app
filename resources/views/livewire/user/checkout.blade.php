@@ -1,5 +1,5 @@
 <!-- V11, prev V1 -->
-<div class="min-h-screen bg-gray-50 pb-24">
+<div class="min-h-screen bg-gray-50">
 
     <!-- Header -->
     <div class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-40">

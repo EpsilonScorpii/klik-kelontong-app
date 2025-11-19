@@ -7,11 +7,11 @@
         {{-- Tab Switcher --}}
         <div class="flex gap-2 mb-6">
             <button wire:click="switchTab('chat')"
-                    class="flex-1 py-3 rounded-full font-semibold transition-colors {{ $activeTab === 'chat' ? 'bg-primary text-white' : 'bg-primary-light text-gray-700' }}">
+                    class="flex-1 py-1 rounded-full font-semibold transition-colors {{ $activeTab === 'chat' ? 'bg-primary text-white' : 'bg-primary-light text-gray-700' }}">
                 Chat
             </button>
             <button wire:click="switchTab('notification')"
-                    class="flex-1 py-3 rounded-full font-semibold transition-colors {{ $activeTab === 'notification' ? 'bg-primary text-white' : 'bg-primary-light text-gray-700' }}">
+                    class="flex-1 py-1 rounded-full font-semibold transition-colors {{ $activeTab === 'notification' ? 'bg-primary text-white' : 'bg-primary-light text-gray-700' }}">
                 Notifikasi
             </button>
         </div>

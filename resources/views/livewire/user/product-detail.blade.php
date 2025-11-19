@@ -99,8 +99,8 @@
     </div>
 
     <div class="fixed bottom-0 left-0 right-0 bg-white z-40 ">
-        <div class="bottom-0 left-0 right-0 bg-white py-1 shadow-xl 
-             rounded-3xl border-t border-black">
+        <div class="bottom-0 left-0 right-0 bg-white py-1 px-3 shadow-xl 
+             rounded-3xl border border-black">
             <div class="max-w-4xl mx-auto flex items-center justify-between gap-4">
 
                 <div class="flex-1">
