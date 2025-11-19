@@ -13,11 +13,12 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'password',
         'phone',
         'gender',
-        'email_verified_at',
-        'password',
-        'is_admin',
+        'profile_photo',
+        'role',
+        'store_id',
     ];
 
     protected $hidden = [
@@ -28,58 +29,28 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'is_admin' => 'boolean',
     ];
 
-    // Relasi ke Store
-    public function store()
+    // Get profile photo URL
+    public function getProfilePhotoUrlAttribute()
     {
-        return $this->hasOne(Store::class, 'user_id');
+        if ($this->profile_photo) {
+            return asset('storage/' . $this->profile_photo);
+        }
+        return null;
     }
 
-    // Relasi ke Cart Items
+    // Relationships
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
+    }
+
     public function cartItems()
     {
         return $this->hasMany(CartItem::class);
     }
 
-    // ✅ Relasi ke Customer Addresses
-    public function addresses()
-    {
-        return $this->hasMany(CustomerAddress::class);
-    }
-
-    // ✅ Relasi ke Default Address
-    public function defaultAddress()
-    {
-        return $this->hasOne(CustomerAddress::class)->where('is_default', true);
-    }
-
-    // Relasi ke Payment Methods
-    public function paymentMethods()
-    {
-        return $this->hasMany(UserPaymentMethod::class);
-    }
-
-    // Relasi ke Default Payment Method
-    public function defaultPaymentMethod()
-    {
-        return $this->hasOne(UserPaymentMethod::class)->where('is_default', true);
-    }
-
-    // Helper untuk hitung total cart items
-    public function getCartItemsCountAttribute()
-    {
-        return $this->cartItems()->sum('quantity');
-    }
-
-    // Helper untuk hitung total harga cart
-    public function getCartTotalAttribute()
-    {
-        return $this->cartItems()->get()->sum('subtotal');
-    }
-
-    // Relasi lainnya
     public function orders()
     {
         return $this->hasMany(Order::class);

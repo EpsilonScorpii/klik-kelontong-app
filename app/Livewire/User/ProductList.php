@@ -13,9 +13,24 @@ class ProductList extends Component
 
     public $searchQuery = '';
     public $selectedCategory = null;
-    public $sortBy = 'latest'; // latest, price_asc, price_desc, popular
+    public $sortBy = 'latest';
 
     protected $paginationTheme = 'tailwind';
+
+    // ✅ Add queryString untuk URL parameters
+    protected $queryString = [
+        'searchQuery' => ['except' => ''],
+        'selectedCategory' => ['except' => null],
+        'sortBy' => ['except' => 'latest'],
+    ];
+
+    // ✅ Mount from URL parameters
+    public function mount()
+    {
+        // Get from URL query params
+        $this->searchQuery = request('search', $this->searchQuery);
+        $this->selectedCategory = request('category', $this->selectedCategory);
+    }
 
     public function render()
     {
@@ -23,17 +38,14 @@ class ProductList extends Component
                                 ->where('is_active', true)
                                 ->where('stock', '>', 0);
 
-        // Filter berdasarkan pencarian
         if (!empty($this->searchQuery)) {
             $productsQuery->where('name', 'like', '%' . $this->searchQuery . '%');
         }
 
-        // Filter berdasarkan kategori
         if ($this->selectedCategory) {
             $productsQuery->where('category_id', $this->selectedCategory);
         }
 
-        // Sorting
         switch ($this->sortBy) {
             case 'price_asc':
                 $productsQuery->orderBy('price', 'asc');
@@ -42,7 +54,7 @@ class ProductList extends Component
                 $productsQuery->orderBy('price', 'desc');
                 break;
             case 'popular':
-                $productsQuery->orderBy('created_at', 'desc'); // TODO: Add view count
+                $productsQuery->orderBy('created_at', 'desc');
                 break;
             default:
                 $productsQuery->latest();

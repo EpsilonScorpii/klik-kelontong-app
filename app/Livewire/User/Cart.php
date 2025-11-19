@@ -110,17 +110,21 @@ class Cart extends Component
 
     public function decrementQuantity($cartItemId)
     {
-        $cartItem = CartItem::find($cartItemId);
-        
-        if ($cartItem && $cartItem->quantity > 1) {
+        try {
+            $cartItem = CartItem::findOrFail($cartItemId);
+
+            if ($cartItem->quantity <= 1) {
+                // ✅ Jika quantity = 1, langsung delete (atau panggil confirm)
+                $this->confirmRemove($cartItemId);
+                return;
+            }
+
             $cartItem->decrement('quantity');
-            $this->loadCartItems();
-            $this->calculateDiscount(); // Recalculate discount
-            
-            $this->dispatch('notify', [
-                'message' => '✅ Quantity berhasil dikurangi',
-                'type' => 'success'
-            ]);
+            $this->loadCart();
+            $this->dispatch('notify', ['message' => '✅ Quantity updated', 'type' => 'success']);
+
+        } catch (\Exception $e) {
+            $this->dispatch('notify', ['message' => '❌ Error: ' . $e->getMessage(), 'type' => 'error']);
         }
     }
 

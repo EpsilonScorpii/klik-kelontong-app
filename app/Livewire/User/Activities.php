@@ -4,7 +4,9 @@ namespace App\Livewire\User;
 
 use Livewire\Component;
 use App\Models\Order;
+use App\Models\CartItem;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class Activities extends Component
 {
@@ -50,12 +52,16 @@ class Activities extends Component
 
     public function trackOrder($orderId)
     {
-        return redirect()->route('order.track', ['order' => $orderId]);
+        return redirect()->route('track-order', $orderId);
     }
 
     public function reviewOrder($orderId)
     {
-        return redirect()->route('order.review', ['order' => $orderId]);
+        // TODO: Implement review page
+        $this->dispatch('notify', [
+            'message' => 'ℹ️ Fitur review sedang dalam pengembangan',
+            'type' => 'info'
+        ]);
     }
 
     public function reorder($orderId)
@@ -63,35 +69,59 @@ class Activities extends Component
         try {
             $order = Order::with('orderItems.product')->find($orderId);
 
+            if (!$order) {
+                $this->dispatch('notify', [
+                    'message' => '❌ Pesanan tidak ditemukan',
+                    'type' => 'error'
+                ]);
+                return;
+            }
+
+            $addedCount = 0;
+
             foreach ($order->orderItems as $item) {
                 if ($item->product && $item->product->is_active && $item->product->stock > 0) {
-                    $cartItem = \App\Models\CartItem::where('user_id', Auth::id())
-                                                    ->where('product_id', $item->product_id)
-                                                    ->first();
+                    $cartItem = CartItem::where('user_id', Auth::id())
+                                       ->where('product_id', $item->product_id)
+                                       ->first();
 
                     if ($cartItem) {
-                        $cartItem->increment('quantity', $item->quantity);
+                        // Check if adding quantity exceeds stock
+                        $newQuantity = $cartItem->quantity + $item->quantity;
+                        if ($newQuantity <= $item->product->stock) {
+                            $cartItem->increment('quantity', $item->quantity);
+                            $addedCount++;
+                        }
                     } else {
-                        \App\Models\CartItem::create([
+                        CartItem::create([
                             'user_id' => Auth::id(),
                             'product_id' => $item->product_id,
-                            'quantity' => $item->quantity,
-                            'price' => $item->product->price,
+                            'quantity' => min($item->quantity, $item->product->stock),
+                            'price' => $item->product->discount_price > 0 ? $item->product->discount_price : $item->product->price,
                         ]);
+                        $addedCount++;
                     }
                 }
             }
 
-            $this->dispatch('notify', [
-                'message' => '✅ Produk berhasil ditambahkan ke keranjang!',
-                'type' => 'success'
-            ]);
-
-            return redirect()->route('cart');
+            if ($addedCount > 0) {
+                $this->dispatch('notify', [
+                    'message' => "✅ {$addedCount} produk ditambahkan ke keranjang!",
+                    'type' => 'success'
+                ]);
+                $this->dispatch('cartUpdated');
+                return redirect()->route('cart');
+            } else {
+                $this->dispatch('notify', [
+                    'message' => '⚠️ Tidak ada produk yang bisa ditambahkan (stok habis atau produk tidak aktif)',
+                    'type' => 'warning'
+                ]);
+            }
 
         } catch (\Exception $e) {
+            Log::error('Reorder failed', ['error' => $e->getMessage()]);
             $this->dispatch('notify', [
-                'message' => '❌ Gagal menambahkan ke keranjang: ' . $e->getMessage(),
+                'message' => '❌ Gagal menambahkan ke keranjang',
                 'type' => 'error'
             ]);
         }
@@ -99,6 +129,7 @@ class Activities extends Component
 
     public function viewOrderDetail($orderId)
     {
-        return redirect()->route('order.detail', ['order' => $orderId]);
+        // TODO: Implement order detail page
+        return redirect()->route('track-order', $orderId);
     }
 }

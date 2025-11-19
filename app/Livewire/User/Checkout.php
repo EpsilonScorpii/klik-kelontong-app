@@ -1,5 +1,6 @@
 <?php
-
+// v16
+// prev : v9
 namespace App\Livewire\User;
 
 use Livewire\Component;
@@ -14,12 +15,13 @@ use Illuminate\Support\Facades\Log;
 
 class Checkout extends Component
 {
-    public $currentStep = 1;
+    public $currentStep = 1; // 1-5 steps
+
     public $addresses = [];
     public $selectedAddressId = null;
     public $selectedAddress = null;
     public $showAddAddressModal = false;
-    
+
     public $newAddress = [
         'label' => '',
         'recipient_name' => '',
@@ -29,7 +31,7 @@ class Checkout extends Component
         'longitude' => null,
         'is_default' => false,
     ];
-    
+
     public $shippingMethods = [
         [
             'id' => 'regular',
@@ -46,13 +48,40 @@ class Checkout extends Component
     ];
     public $selectedShipping = 'express';
     public $selectedShippingData = null;
-    
+
+    // Payment methods
+    public $paymentMethods = [
+        'cod' => [
+            'id' => 'cod',
+            'name' => 'Cash On Delivery',
+            'description' => 'Bayar saat barang diterima',
+        ],
+        'dana' => [
+            'id' => 'dana',
+            'name' => 'Dana',
+            'description' => 'E-Wallet Dana',
+        ],
+        'ovo' => [
+            'id' => 'ovo',
+            'name' => 'OVO',
+            'description' => 'E-Wallet OVO',
+        ],
+        'gopay' => [
+            'id' => 'gopay',
+            'name' => 'Gopay',
+            'description' => 'E-Wallet Gopay',
+        ],
+    ];
+    public $selectedPaymentMethod = 'cod';
+
     public $cartItems = [];
     public $subtotal = 0;
     public $shippingCost = 10000;
     public $discount = 0;
     public $appliedCoupon = null;
     public $total = 0;
+
+    public $createdOrder = null; // Store created order
 
     public function mount()
     {
@@ -70,16 +99,25 @@ class Checkout extends Component
 
     public function render()
     {
-        return view('livewire.user.checkout')->layout('layouts.app', ['title' => 'Checkout']);
+        $pageTitle = match ($this->currentStep) {
+            1 => 'Shipping Address',
+            2 => 'Choose Shipping',
+            3 => 'Checkout',
+            4 => 'Pembayaran',
+            5 => 'Payment Success',
+            default => 'Checkout',
+        };
+
+        return view('livewire.user.checkout')->layout('layouts.app', ['title' => $pageTitle]);
     }
 
     private function loadAddresses()
     {
         $this->addresses = CustomerAddress::where('user_id', Auth::id())
-                                         ->orderBy('is_default', 'desc')
-                                         ->get()
-                                         ->toArray();
-        
+            ->orderBy('is_default', 'desc')
+            ->get()
+            ->toArray();
+
         $defaultAddress = collect($this->addresses)->firstWhere('is_default', true);
         if ($defaultAddress) {
             $this->selectedAddressId = $defaultAddress['id'];
@@ -152,6 +190,12 @@ class Checkout extends Component
         }
     }
 
+    public function selectPaymentMethod($method)
+    {
+        $this->selectedPaymentMethod = $method;
+        Log::info('Payment method selected', ['method' => $method]);
+    }
+
     public function changeAddress()
     {
         $this->currentStep = 1;
@@ -164,18 +208,31 @@ class Checkout extends Component
 
     public function nextStep()
     {
+        Log::info('nextStep() called', ['current_step' => $this->currentStep]);
+
         if ($this->currentStep === 1) {
             if (!$this->selectedAddressId) {
-                $this->dispatch('notify', ['message' => '⚠️ Pilih alamat pengiriman', 'type' => 'error']);
+                $this->dispatch('notify', ['message' => '⚠️ Pilih alamat', 'type' => 'error']);
                 return;
             }
             $this->currentStep = 2;
+            Log::info('Moved to step 2');
         } elseif ($this->currentStep === 2) {
             if (!$this->selectedShipping) {
-                $this->dispatch('notify', ['message' => '⚠️ Pilih metode pengiriman', 'type' => 'error']);
+                $this->dispatch('notify', ['message' => '⚠️ Pilih shipping', 'type' => 'error']);
                 return;
             }
             $this->currentStep = 3;
+            Log::info('Moved to step 3');
+        } elseif ($this->currentStep === 3) {
+            Log::info('Creating order from step 3...');
+            $this->createOrder();
+            // currentStep akan di-set di dalam createOrder()
+
+        } elseif ($this->currentStep === 4) {
+            Log::info('Processing payment from step 4...');
+            $this->processPayment();
+            // currentStep akan di-set di dalam processPayment()
         }
     }
 
@@ -191,7 +248,7 @@ class Checkout extends Component
     public function toggleAddAddressModal()
     {
         $this->showAddAddressModal = !$this->showAddAddressModal;
-        
+
         if (!$this->showAddAddressModal) {
             $this->reset('newAddress');
         } else {
@@ -232,27 +289,12 @@ class Checkout extends Component
         }
     }
 
-    public function continueToPayment()
+    private function createOrder()
     {
-        Log::info('=== Continue to Payment clicked ===', [
-            'user_id' => Auth::id(),
-            'step' => $this->currentStep,
-            'cart_count' => count($this->cartItems),
-            'address_id' => $this->selectedAddressId,
-            'shipping' => $this->selectedShipping,
+        Log::info('=== createOrder() called ===', [
+            'current_step' => $this->currentStep,
+            'cart_items' => count($this->cartItems),
         ]);
-
-        if (count($this->cartItems) === 0) {
-            Log::warning('Cart is empty');
-            $this->dispatch('notify', ['message' => '⚠️ Keranjang kosong', 'type' => 'error']);
-            return redirect()->route('cart');
-        }
-
-        if (!$this->selectedAddressId || !$this->selectedShipping) {
-            Log::warning('Missing address or shipping');
-            $this->dispatch('notify', ['message' => '⚠️ Lengkapi data', 'type' => 'error']);
-            return;
-        }
 
         try {
             DB::beginTransaction();
@@ -261,70 +303,146 @@ class Checkout extends Component
             $shipping = $this->selectedShippingData;
             $storeId = $this->cartItems[0]['product']['store_id'] ?? null;
 
-            Log::info('Creating order...', ['store_id' => $storeId, 'total' => $this->total]);
+            Log::info('Preparing order data...');
 
-            $order = Order::create([
+            // ✅ Insert menggunakan DB::table untuk bypass masalah
+            $orderId = DB::table('orders')->insertGetId([
                 'user_id' => Auth::id(),
                 'store_id' => $storeId,
                 'order_number' => 'ORD-' . strtoupper(uniqid()),
                 'status' => 'pending',
-                'subtotal' => $this->subtotal,
-                'delivery_fee' => $this->shippingCost,
+                'subtotal' => $this->subtotal ?? 0,
+                'delivery_fee' => $this->shippingCost ?? 0,
                 'service_fee' => 0,
-                'discount' => $this->discount,
-                'total' => $this->total,
-                'payment_method' => 'cod',
+                'discount' => $this->discount ?? 0,
+                'total' => $this->total ?? 0,
+                'total_amount' => $this->total ?? 0, // Jika kolom ini ada
+                'payment_method' => $this->selectedPaymentMethod ?? 'cod',
                 'payment_status' => 'pending',
                 'delivery_address' => json_encode([
-                    'label' => $address['label'],
-                    'recipient_name' => $address['recipient_name'],
-                    'recipient_phone' => $address['recipient_phone'],
-                    'address' => $address['address'],
+                    'label' => $address['label'] ?? '',
+                    'recipient_name' => $address['recipient_name'] ?? '',
+                    'recipient_phone' => $address['recipient_phone'] ?? '',
+                    'address' => $address['address'] ?? '',
                 ]),
-                'shipping_method' => $shipping['name'],
+                'shipping_method' => $shipping['name'] ?? 'Express',
+                'notes' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
 
-            Log::info('Order created', ['order_id' => $order->id, 'order_number' => $order->order_number]);
+            Log::info('Order inserted', ['order_id' => $orderId]);
 
+            // Get order object
+            $order = Order::find($orderId);
+
+            // Create order items
             foreach ($this->cartItems as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
+                DB::table('order_items')->insert([
+                    'order_id' => $orderId,
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
                     'subtotal' => $item['quantity'] * $item['price'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
+
+            Log::info('Order items created');
 
             if ($this->appliedCoupon) {
-                \App\Models\CouponUsage::create([
+                DB::table('coupon_usages')->insert([
                     'coupon_id' => $this->appliedCoupon->id,
                     'user_id' => Auth::id(),
-                    'order_id' => $order->id,
+                    'order_id' => $orderId,
                     'discount_amount' => $this->discount,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
-                $this->appliedCoupon->increment('used_count');
-            }
 
-            CartItem::where('user_id', Auth::id())->delete();
-            session()->forget('applied_coupon');
+                DB::table('coupons')
+                    ->where('id', $this->appliedCoupon->id)
+                    ->increment('used_count');
+
+                Log::info('Coupon applied');
+            }
 
             DB::commit();
 
-            Log::info('Order completed successfully', ['order_id' => $order->id]);
+            $this->createdOrder = $order;
 
-            $this->dispatch('notify', ['message' => '✅ Pesanan berhasil dibuat!', 'type' => 'success']);
+            Log::info('✅ Order creation SUCCESS, moving to step 4');
 
-            return $this->redirect(route('payment', ['orderId' => $order->id]), navigate: true);
+            // ✅ Set step ke 4
+            $this->currentStep = 4;
 
+            $this->dispatch('notify', ['message' => '✅ Order berhasil dibuat!', 'type' => 'success']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Order creation failed', [
+
+            Log::error('❌ createOrder() FAILED', [
                 'error' => $e->getMessage(),
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString(),
             ]);
+
             $this->dispatch('notify', ['message' => '❌ Error: ' . $e->getMessage(), 'type' => 'error']);
         }
+    }
+
+    private function processPayment()
+    {
+        Log::info('=== processPayment() called ===', [
+            'order_id' => $this->createdOrder->id ?? 'null',
+            'payment_method' => $this->selectedPaymentMethod,
+        ]);
+
+        if (!$this->createdOrder) {
+            Log::error('No order found to process payment');
+            $this->dispatch('notify', ['message' => '⚠️ Order tidak ditemukan', 'type' => 'error']);
+            return;
+        }
+
+        try {
+            $this->createdOrder->update([
+                'payment_method' => $this->selectedPaymentMethod,
+                'payment_status' => 'paid',
+                'status' => 'confirmed',
+            ]);
+
+            Log::info('Payment processed', ['order_id' => $this->createdOrder->id]);
+
+            // Clear cart
+            CartItem::where('user_id', Auth::id())->delete();
+            session()->forget('applied_coupon');
+
+            Log::info('Cart cleared, moving to step 5');
+
+            // ✅ Set step ke 5 (success)
+            $this->currentStep = 5;
+
+            Log::info('Step changed to 5', ['current_step' => $this->currentStep]);
+
+            $this->dispatch('notify', ['message' => '✅ Pembayaran berhasil!', 'type' => 'success']);
+        } catch (\Exception $e) {
+            Log::error('=== processPayment() FAILED ===', [
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+            ]);
+
+            $this->dispatch('notify', ['message' => '❌ Gagal: ' . $e->getMessage(), 'type' => 'error']);
+        }
+    }
+
+    public function backToHome()
+    {
+        return redirect()->route('home');
+    }
+
+    public function viewOrder()
+    {
+        return redirect()->route('activities');
     }
 }

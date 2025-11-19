@@ -18,7 +18,14 @@ export default {
                 'kl-green': {
                     DEFAULT: '#6F8F72', // Warna Hijau Button (sesuai tebakan saya)
                     dark: '#3A5A40'     // Warna Hijau Logo (sesuai tebakan saya)
-                }
+                },
+
+                'primary': {
+                    light: '#9EDF9C', // Sangat cerah
+                    semi_dark: '#62825D', // Default shade/utama
+                    dark: '#526E48', // Sangat gelap
+                    DEFAULT: '#526E48', // Opsional: Tentukan default
+                },
             }
         },
     },

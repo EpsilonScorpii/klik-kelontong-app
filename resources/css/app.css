@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ✅ Safe area untuk iOS notch */
+@layer utilities {
+    .safe-area-bottom {
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+}
+
+/* ✅ Smooth scroll */
+html {
+    scroll-behavior: smooth;
+}
+
+/* ✅ Prevent content jump saat scroll */
+body {
+    overflow-x: hidden;
+}

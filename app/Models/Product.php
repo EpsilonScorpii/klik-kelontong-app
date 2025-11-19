@@ -19,6 +19,7 @@ class Product extends Model
         'price',
         'discount_price',
         'stock',
+        'total_sales',
         'min_stock',
         'unit',
         'barcode',
@@ -26,6 +27,12 @@ class Product extends Model
         'images',
         'weight',
         'is_active',
+    ];
+
+    protected $attributes = [
+        'discount_price' => 0.0,
+        'stock' => 0,
+        'is_active' => true,
     ];
 
     protected $casts = [

@@ -40,13 +40,17 @@ Route::get('/', Homepage::class)->name('home');
 Route::get('/products', ProductList::class)->name('products');
 
 // Category Filter - Public
-Route::get('/category/{slug}', function ($slug) {
-    return app(ProductList::class)->filterByCategory($slug);
-})->name('products.category');
+// Route::get('/category/{slug}', function ($slug) {
+//     return app(ProductList::class)->filterByCategory($slug);
+// })->name('products.category');
 
 // Search Products - Public
+// Route::get('/search', function () {
+//     return app(ProductList::class);
+// })->name('products.search');
+
 Route::get('/search', function () {
-    return app(ProductList::class);
+    return redirect()->route('products', ['search' => request('q')]);
 })->name('products.search');
 
 // Location Routes
@@ -85,15 +89,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pembayaran', PaymentMethods::class)->name('payments');
 
     // User Dashboard & Activities
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->middleware('verified')->name('dashboard');
+    // Route::get('/dashboard', function () {
+    //     return view('dashboard');
+    // })->middleware('verified')->name('dashboard');
 
     Route::get('/activities', Activities::class)->name('activities');
 
-    Route::get('/orders', function () {
-        return view('coming-soon', ['title' => 'Pesanan Saya']);
-    })->name('orders');
+    Route::get('/track-order/{orderId}', \App\Livewire\User\TrackOrder::class)->name('track-order');
 
     Route::get('/wishlist', function () {
         return view('coming-soon', ['title' => 'Wishlist']);
@@ -104,14 +106,30 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payment/{orderId}/success', PaymentSuccess::class)->name('payment.success');
 
     // Inbox/Messages
-    Route::get('/inbox', function () {
-        return view('coming-soon', ['title' => 'Kotak Masuk']);
-    })->name('inbox');
+    Route::get('/inbox', \App\Livewire\User\Inbox::class)->name('inbox');
 
-    // User Account
-    Route::get('/account', function () {
-        return view('coming-soon', ['title' => 'Akun Saya']);
-    })->name('account');
+    // Account
+    Route::get('/account', \App\Livewire\User\Account::class)->name('account');
+
+    // Profile Edit
+    Route::get('/profile/edit', \App\Livewire\User\ProfileEdit::class)->name('profile.edit');
+
+
+    // Settings
+    Route::get('/settings', \App\Livewire\User\Settings::class)->name('settings');
+    Route::get('/settings/notifications', function () {
+        return view('coming-soon', ['title' => 'Notification Settings']);
+    })->name('settings.notifications');
+    Route::get('/settings/password', \App\Livewire\User\PasswordManager::class)->name('settings.password');
+    Route::get('/settings/delete-account', function () {
+        return view('coming-soon', ['title' => 'Delete Account']);
+    })->name('settings.delete-account');
+
+    // Help Center
+    Route::get('/help-center', \App\Livewire\User\HelpCenter::class)->name('help-center');
+
+    // Privacy Policy
+    Route::get('/privacy-policy', \App\Livewire\User\PrivacyPolicy::class)->name('privacy-policy');
 
 
     // ========================================================================

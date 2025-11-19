@@ -121,7 +121,7 @@
                                 @else
                                     <a href="{{ route('login') }}"
                                        class="block w-full bg-gray-600 text-white text-center py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors text-sm">
-                                        🔒 Login untuk Beli
+                                        Beli
                                     </a>
                                 @endauth
                             </div>

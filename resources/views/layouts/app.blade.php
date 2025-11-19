@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,55 +8,120 @@
     <title>{{ $title ?? 'Klik Kelontong' }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
+
 <body class="font-sans antialiased bg-gray-50">
-    
-    <!-- Header & Navigation -->
-    <!-- ... your header code ... -->
+
+    <!-- Header - Pixel Perfect -->
+    <header class="bg-white sticky top-0 z-50">
+        <!-- Main Header dengan Logo & Search -->
+        <div class="bg-primary px-4 py-3">
+            <div class="max-w-7xl mx-auto flex items-center gap-3">
+                <!-- Logo -->
+                <a href="{{ route('home') }}" class="flex items-center gap-2 rounded-lg px-3 py-2">
+                    <img src="{{ asset('images/logo-klik-kelontong.png') }}" alt="Logo Klik Kelontong" class="w-9 h-9">
+                    <span class="text-white font-light text-sm">Klik Kelontong</span>
+                </a>
+
+                <!-- Search Bar -->
+                <div class="flex-1 relative">
+                    <form action="{{ route('products.search') }}" method="GET">
+                        <input type="text" name="q" placeholder=""
+                            class="w-full bg-gray-300 pl-3 pr-12 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-300">
+                        <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2">
+                            <img src="{{ asset('images/search-icon.png') }}" alt="Search" class="w-6 h-6">
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Cart Icon -->
+                <a href="{{ auth()->check() ? route('cart') : route('login') }}" class="relative p-2">
+                    <img src="{{ asset('images/cart.png') }}" alt="Keranjang" class="w-7 h-7">
+                    @auth
+                        @php $cartCount = auth()->user()->cart_items_count ?? 0; @endphp
+                        @if ($cartCount > 0)
+                            <span
+                                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full font-bold">
+                                {{ $cartCount }}
+                            </span>
+                        @endif
+                    @endauth
+                </a>
+            </div>
+        </div>
+
+        <!-- Category Dropdown -->
+        @if (request()->routeIs('home'))
+            <div class="bg-gray-100 px-4 py-2">
+                <div class="max-w-7xl mx-auto">
+                    <select
+                        class="w-full md:w-48 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option>All Category</option>
+                        @php $categories = \App\Models\Category::where('is_active', true)->get(); @endphp
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        @endif
+    </header>
 
     <!-- Main Content -->
-    <main class="min-h-screen">
+    <main class="min-h-screen bg-white">
         {{ $slot }}
     </main>
 
-    <!-- Bottom Navigation -->
-    <!-- ... your bottom nav code ... -->
+    <!-- Bottom Navigation - Pixel Perfect -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-primary-light border-t border-gray-200 md:hidden z-40">
+        <div class="grid grid-cols-5">
+            <!-- Beranda -->
+            <a href="{{ route('home') }}"
+                class="flex flex-col items-center py-2 {{ request()->routeIs('home') ? 'text-green-600' : 'text-black' }}">
+                <img src="{{ asset('images/nav-home.png') }}" alt="Beranda" class="w-6 h-6">
+                <span class="text-xs mt-1">Beranda</span>
+            </a>
 
-    <!-- Toast Notification -->
-    <div x-data="{
-        show: false,
-        message: '',
-        type: 'success',
-        init() {
-            window.addEventListener('notify', event => {
-                this.message = event.detail.message;
-                this.type = event.detail.type || 'success';
-                this.show = true;
-                setTimeout(() => this.show = false, 3000);
-            });
-        }
-    }" x-show="show" x-transition class="fixed top-4 right-4 z-50 max-w-sm">
-        <div :class="{
-            'bg-green-100 border-green-400 text-green-800': type === 'success',
-            'bg-red-100 border-red-400 text-red-800': type === 'error',
-            'bg-blue-100 border-blue-400 text-blue-800': type === 'info'
-        }"
-            class="border px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
-            <span x-text="message"></span>
-            <button @click="show = false" class="text-current opacity-50 hover:opacity-100">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-            </button>
+            <!-- Aktivitas -->
+            <a href="{{ auth()->check() ? route('activities') : route('login') }}"
+                class="flex flex-col items-center py-2 {{ request()->routeIs('activities') ? 'text-green-600' : 'text-black' }}">
+                <img src="{{ asset('images/nav-aktivitas.png') }}" alt="Aktivitas" class="w-6 h-6">
+                <span class="text-xs mt-1">Aktivitas</span>
+            </a>
+
+            <!-- Pembayaran -->
+            <a href="{{ auth()->check() ? route('payments') : route('login') }}"
+                class="flex flex-col items-center py-2 {{ request()->routeIs('payments') ? 'text-green-600' : 'text-black' }}">
+                <img src="{{ asset('images/nav-pembayaran.png') }}" alt="Pembayaran" class="w-6 h-6">
+                <span class="text-xs mt-1">Pembayaran</span>
+            </a>
+
+            <!-- Kotak Masuk -->
+            <a href="{{ auth()->check() ? route('inbox') : route('login') }}"
+                class="flex flex-col items-center py-2 {{ request()->routeIs('inbox') ? 'text-green-600' : 'text-black' }}">
+                <img src="{{ asset('images/nav-kotakmasuk.png') }}" alt="Kotak Masuk" class="w-6 h-6">
+                <span class="text-xs mt-1">Kotak Masuk</span>
+            </a>
+
+            <!-- Akun -->
+            <a href="{{ auth()->check() ? route('account') : route('login') }}"
+                class="flex flex-col items-center py-2 {{ request()->routeIs('account') ? 'text-green-600' : 'text-black' }}">
+                <img src="{{ asset('images/nav-akun.png') }}" alt="Akun" class="w-6 h-6">
+                <span class="text-xs mt-1">Akun</span>
+            </a>
         </div>
-    </div>
+    </nav>
 
-    <!-- ✅ PENTING: Livewire Scripts HARUS sebelum Alpine -->
     @livewireScripts
-    
-    <!-- ✅ Alpine.js - Load setelah Livewire -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+
 </body>
+
 </html>
